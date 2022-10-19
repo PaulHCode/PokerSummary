@@ -20,6 +20,7 @@
 .NOTES
    It was fun to write this in one go while on a road trip. I like it when other folks drive.
 #>
+Function New-PokerSummary{
 [CmdletBinding()]
 param ( 
     [Parameter()]
@@ -104,33 +105,34 @@ If (($allPlaces | Where-Object { $Null -eq $_.email }).count -gt 0) {
 ############Export to pretty format
 
 ForEach ($tournament in ($allPlaces.Tournament | Select-Object -Unique)) {
-    $outputFile = Join-Path $outputDirectory "$tournament.html"
-    $thisTournament = $allPlaces | Where-Object { $_.Tournament -eq $tournament }
-    [string]$HTMLReport = ''
-    $HTMLReport = New-HTMLReport -Title 'Poker Tournament Results'
-    <#
-    $Header = @{
-        TournamentName = $tournament
-        TournamentDirector = 'unknown'
-        NumberOfParticipants = ($thisTournament.count)
-        NumberOfRebuys = ($thisTournament.Rebuys | Measure-Object -Sum).Sum
-        NumberOfAddons = ($thisTournament.Addon  -eq 'Yes').Count 
-        Winner = ($thisTournament | Where-Object { $_.Place -eq 1 }).Email
-    }
+        $outputFile = Join-Path $outputDirectory "$tournament.html"
+        $thisTournament = $allPlaces | Where-Object { $_.Tournament -eq $tournament }
+        [string]$HTMLReport = ''
+        $HTMLReport = New-HTMLReport -Title 'Poker Tournament Results'
+        <#
+        $Header = @{
+            TournamentName = $tournament
+            TournamentDirector = 'unknown'
+            NumberOfParticipants = ($thisTournament.count)
+            NumberOfRebuys = ($thisTournament.Rebuys | Measure-Object -Sum).Sum
+            NumberOfAddons = ($thisTournament.Addon  -eq 'Yes').Count 
+            Winner = ($thisTournament | Where-Object { $_.Place -eq 1 }).Email
+        }
 
-    $HTMLReport += New-HTMLReportSection -SectionTitle 'Summary' -SectionContents $Header
- 
-#>
-
-    $HTMLReport += New-HTMLReportHeader -TournamentName $tournament `
-        -TournamentDirector 'unknown' `
-        -NumberOfParticipants ($thisTournament.count) `
-        -NumberOfRebuys ($thisTournament.Rebuys | Measure-Object -Sum).Sum `
-        -NumberOfAddons ($thisTournament.Addon -eq 'Yes').Count `
-        -Winner ($thisTournament | Where-Object { $_.Place -eq 1 }).Email
+        $HTMLReport += New-HTMLReportSection -SectionTitle 'Summary' -SectionContents $Header
     
-    $HTMLReport += New-HTMLReportSection -SectionTitle 'Players' -SectionContents ($thisTournament | Sort-Object Place -Descending)
+    #>
 
-    $HTMLReport | Out-File (Join-Path $outputDirectory "$tournament.html")
+        $HTMLReport += New-HTMLReportHeader -TournamentName $tournament `
+            -TournamentDirector 'unknown' `
+            -NumberOfParticipants ($thisTournament.count) `
+            -NumberOfRebuys ($thisTournament.Rebuys | Measure-Object -Sum).Sum `
+            -NumberOfAddons ($thisTournament.Addon -eq 'Yes').Count `
+            -Winner ($thisTournament | Where-Object { $_.Place -eq 1 }).Email
+        
+        $HTMLReport += New-HTMLReportSection -SectionTitle 'Players' -SectionContents ($thisTournament | Sort-Object Place -Descending)
 
+        $HTMLReport | Out-File (Join-Path $outputDirectory "$tournament.html")
+
+    }
 }
