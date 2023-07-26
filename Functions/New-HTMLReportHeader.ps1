@@ -32,10 +32,12 @@ Function New-HTMLReportHeader {
     $NumberOfParticipants = "Number of Participants: $NumberOfParticipants"
     $NumberOfRebuys = "Number of Rebuys: $NumberOfRebuys"
     $NumberOfAddons = "Number of Addons: $NumberOfAddons"
+    $Winner = "Winner: $Winner"
 
-    "<H2 id=$('"'+$($TournamentName.Replace(' ',''))+'"')>$($TournamentName)</H2>"
-    "<H2 id=$('"'+$($TournamentDirector.Replace(' ',''))+'"')>$($TournamentDirector)</H2>"
+    "<H2 id=$('"'+$($TournamentName)+'"')>$($TournamentName)</H2>"
+    "<H2 id=$('"'+$($TournamentDirector)+'"')>$($TournamentDirector)</H2>"
     "<H2 id=$('"'+$($NumberOfParticipants.Replace(' ',''))+'"')>$($NumberOfParticipants)</H2>"
     "<H2 id=$('"'+$($NumberOfRebuys.Replace(' ',''))+'"')>$($NumberOfRebuys)</H2>"
     "<H2 id=$('"'+$($NumberOfAddons.Replace(' ',''))+'"')>$($NumberOfAddons)</H2>"
+    "<H2 id=$('"'+$($Winner.Replace(' ',''))+'"')>$($Winner)</H2>"
 }

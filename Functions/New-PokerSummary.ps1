@@ -20,11 +20,11 @@
 .NOTES
    It was fun to write this in one go while on a road trip. I like it when other folks drive.
 #>
-Function New-PokerSummary{
+Function New-PokerSummary {
     [CmdletBinding()]
     param ( 
         [Parameter()]
-        [ValidateScript({ (test-path $_ -PathType Container) -and ((Get-ChildItem $_ -Filter *.txt).count -gt 0) })]
+        [ValidateScript({ (Test-Path $_ -PathType Container) -and ((Get-ChildItem $_ -Filter *.txt).count -gt 0) })]
         [string]
         $ResultsDir = 'C:\Users\GOPAdmin\AppData\Roaming\Poker Mavens 6\TourneyResults', #'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\TourneyResults',
         [Parameter(Mandatory = $true)]
@@ -71,26 +71,64 @@ Function New-PokerSummary{
         #    "Line: $line"
         #    "Abortion Counter: $abortioncounter"
     
-    
+        $Header = @{
+            TournamentName = (($fileContents | Where-Object { $_ -match '^Tournament=' }) | Select-Object -First 1).split('=')[1] #including an '=' in the tournament name breaks this
+            Participants   = (($fileContents | Where-Object { $_ -match '^Entrants=' }) | Select-Object -First 1).split('=')[1]
+            Rebuys         = (($fileContents | Where-Object { $_ -match '^Rebuys=' }) | Select-Object -First 1).split('=')[1]
+            AddOns         = (($fileContents | Where-Object { $_ -match '^AddOns=' }) | Select-Object -First 1).split('=')[1]
+        }
+
         $fileContents = ($fileContents | Where-Object { $_ -Match '^Place.*=.*' }) #get rid of lines in the log file that are not place information lines since that is all we care about
         
-        $fileContents | ForEach-Object {
+        $Places = $fileContents | ForEach-Object {
             $UserName = $_.split('=')[1].split(' ')[0]  #$_.split(' ')[0].split('=')[1]
             [pscustomobject]@{
-                Tournament   = ([string]$tournament.Name[($tournament.Name.IndexOf(' ') + 1)..($tournament.Name.Length - 5)]).Replace(' ', '')
+                Tournament   = $Header.TournamentName #([string]$tournament.Name[($tournament.Name.IndexOf(' ') + 1)..($tournament.Name.Length - 5)]).Replace(' ', '')
                 Place        = [int]$_.Split('=')[0].split('e')[1] #[int]($_.Split('Place')[0].split('=')[0]) #$_.Split('Place')[1].split('=')[0] #[int]($_.Split('=')[0].split('e')[1])
                 UserName     = $UserName
-                Rebuys       = If ($_.contains('Rebuys:')) { $_.Split('Rebuys:')[1].Split('=')[0] }Else { 0 }  #$_.Split(' ')[2].Split(':')[1]
+                Rebuys       = If ($_.contains('Rebuys:')) { $_.Split('Rebuys:')[1].Split(' ')[0] }Else { 0 }  #$_.Split(' ')[2].Split(':')[1]
                 Addon        = If ($_.contains('AddOn:')) { $_.Split('AddOn:')[1].Split(' ')[0] }Else { 'No' } #$_.Split(' ')[3].Split(':')[1]
                 KnockedOutBy = If ($_.contains('KO:')) { $_.Split('KO:')[1].Split(' ')[0] }Else { 'unknown' } #$_.Split(' ')[4].Split(':')[1]
                 Email        = $($EmailHash.$UserName)
             }
         }
+
+        ##########Do export here instead
+        #$outputFile = Join-Path $outputDirectory "$tournament.html"
+        #$thisTournament = $allPlaces | Where-Object { $_.Tournament -eq $tournament }
+        #$thisTournament = $Places
+        [string]$HTMLReport = ''
+        $HTMLReport = New-HTMLReport -Title 'Poker Tournament Results'
+
+
+        $NewReportSplat = @{
+            TournamentName       = $Header.TournamentName
+            TournamentDirector   = 'unknown'
+            NumberOfParticipants = $Header.Participants
+            NumberOfRebuys       = $Header.Rebuys
+            NumberOfAddons       = $Header.AddOns
+            Winner               = ($Places | Where-Object { $_.Place -eq 1 }).Email -join (';')
+        }
+        $HTMLReport = New-HTMLReportHeader @NewReportSplat
+        <#
+        $HTMLReport += New-HTMLReportHeader -TournamentName $tournament `
+            -TournamentDirector 'unknown' `
+            -NumberOfParticipants $Header.Participants ` #($thisTournament.count) `
+            -NumberOfRebuys $Header.Rebuys ` #($thisTournament.Rebuys | Measure-Object -Sum).Sum `
+            -NumberOfAddons $Header.AddOns ` #($thisTournament.Addon -eq 'Yes').Count `
+            -Winner ($Places | Where-Object { $_.Place -eq 1 }).Email
+        #>
+        $HTMLReport += New-HTMLReportSection -SectionTitle 'Players' -SectionContents ($places | Select-Object -ExcludeProperty Tournament | Sort-Object Place -Descending)
+        #$filename = ([char[]]($Header.TournamentName) | Where-Object { [io.path]::GetInvalidFileNameChars() -notcontains $_ }) -join ('')
+        $filename = $Tournament.name.replace($Tournament.Extension, '')
+        $filename = $filename + '.html'
+        $HTMLReport | Out-File (Join-Path $outputDirectory $filename) #"$tournament.html")
+
     }
     
-If (($allPlaces | Where-Object { $Null -eq $_.email }).count -gt 0) {
-    Write-Warning @'
-        The data is complete due to an out of date Email file.
+    If (($allPlaces | Where-Object { $Null -eq $_.email }).count -gt 0) {
+        Write-Warning @'
+        The data is not complete due to an out of date Email file.
         To get a new email file: 
             1. Open the Poker Maves GUI, 
             2. Select the 'Accounts' tab
@@ -102,13 +140,14 @@ If (($allPlaces | Where-Object { $Null -eq $_.email }).count -gt 0) {
     
     
     ############Export to pretty format
-    
-ForEach ($tournament in ($allPlaces.Tournament | Select-Object -Unique)) {
+    <#
+    ForEach ($tournament in ($allPlaces.Tournament | Select-Object -Unique)) {
         $outputFile = Join-Path $outputDirectory "$tournament.html"
         $thisTournament = $allPlaces | Where-Object { $_.Tournament -eq $tournament }
         [string]$HTMLReport = ''
         $HTMLReport = New-HTMLReport -Title 'Poker Tournament Results'
-        <#
+        #>
+    <#
         $Header = @{
             TournamentName = $tournament
             TournamentDirector = 'unknown'
@@ -121,7 +160,7 @@ ForEach ($tournament in ($allPlaces.Tournament | Select-Object -Unique)) {
         $HTMLReport += New-HTMLReportSection -SectionTitle 'Summary' -SectionContents $Header
     
     #>
-
+    <#
         $HTMLReport += New-HTMLReportHeader -TournamentName $tournament `
             -TournamentDirector 'unknown' `
             -NumberOfParticipants ($thisTournament.count) `
@@ -129,9 +168,19 @@ ForEach ($tournament in ($allPlaces.Tournament | Select-Object -Unique)) {
             -NumberOfAddons ($thisTournament.Addon -eq 'Yes').Count `
             -Winner ($thisTournament | Where-Object { $_.Place -eq 1 }).Email
         
-        $HTMLReport += New-HTMLReportSection -SectionTitle 'Players' -SectionContents ($thisTournament | Sort-Object Place -Descending)
+        $HTMLReport += New-HTMLReportSection -SectionTitle '' -SectionContents ($thisTournament | Sort-Object Place -Descending)
 
-        $HTMLReport | Out-File (Join-Path $outputDirectory "$tournament.html")
+        $HTMLReport | Out-File (Join-Path $outputDirectory "$tournament.html") -Force
 
     }
+    #>
 }
+
+
+############
+
+$ResultsDir = 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\TourneyResults'
+$EmailFile = 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\Reports\20230725_ReportEmails.txt'
+$outputDirectory = 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\Testing\1'
+
+New-PokerSummary -ResultsDir $ResultsDir -EmailFile $EmailFile -outputDirectory $outputDirectory
