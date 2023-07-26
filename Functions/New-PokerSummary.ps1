@@ -178,9 +178,10 @@ Function New-PokerSummary {
 
 
 ############
-
+<#
 $ResultsDir = 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\TourneyResults'
 $EmailFile = 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\Reports\20230725_ReportEmails.txt'
 $outputDirectory = 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\Testing\1'
 
-New-PokerSummary -ResultsDir $ResultsDir -EmailFile $EmailFile -outputDirectory $outputDirectory
+Measure-Command {New-PokerSummary -ResultsDir $ResultsDir -EmailFile $EmailFile -outputDirectory $outputDirectory}
+#>
