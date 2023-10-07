@@ -83,7 +83,7 @@ Function New-PokerSummary {
         $Places = $fileContents | ForEach-Object {
             $UserName = $_.split('=')[1].split(' ')[0]  #$_.split(' ')[0].split('=')[1]
             [pscustomobject]@{
-                Tournament   = $Header.TournamentName #([string]$tournament.Name[($tournament.Name.IndexOf(' ') + 1)..($tournament.Name.Length - 5)]).Replace(' ', '')
+#                Tournament   = $Header.TournamentName #([string]$tournament.Name[($tournament.Name.IndexOf(' ') + 1)..($tournament.Name.Length - 5)]).Replace(' ', '')
                 Place        = [int]$_.Split('=')[0].split('e')[1] #[int]($_.Split('Place')[0].split('=')[0]) #$_.Split('Place')[1].split('=')[0] #[int]($_.Split('=')[0].split('e')[1])
                 UserName     = $UserName
                 Rebuys       = If ($_.contains('Rebuys:')) { $_.Split('Rebuys:')[1].Split(' ')[0] }Else { 0 }  #$_.Split(' ')[2].Split(':')[1]
