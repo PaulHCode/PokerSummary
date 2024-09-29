@@ -1,24 +1,24 @@
 <#
-.Synopsis
-   Generates Tournament summary data for Poker Maves touraments
-.DESCRIPTION
-   Long description
-.EXAMPLE
-   .\New-PokerReport.ps1
-.EXAMPLE
-   .\New-PokerReport.ps1 -EmailFile 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\Reports\20221019_ReportEmails.txt' -outputDirectory 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\MyOutput\' -ResultsDir 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\TourneyResults\'
+    .Synopsis
+    Generates Tournament summary data for Poker Maves touraments
+    .DESCRIPTION
+    Long description
+    .EXAMPLE
+    .\New-PokerReport.ps1
+    .EXAMPLE
+    .\New-PokerReport.ps1 -EmailFile 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\Reports\20221019_ReportEmails.txt' -outputDirectory 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\MyOutput\' -ResultsDir 'C:\Users\pauharri\OneDrive - Microsoft\Documents\Poker\TourneyResults\'
 
-    I copied the data off the server and processed it locally on my workstation. 
-.PARAMETER ResultsDir
-    The path to the directory with all the results from the tournaments
-.PARAMETER EmailFile
-    The file exported from Poker Maves listing all emails (Accounts > Emails With Names)
-.PARAMETER outputDirectory
-    THe directory to put html output files for each tournament in.
-.OUTPUTS
-   HTML files written to the outputDirectory folder
-.NOTES
-   It was fun to write this in one go while on a road trip. I like it when other folks drive.
+        I copied the data off the server and processed it locally on my workstation. 
+    .PARAMETER ResultsDir
+        The path to the directory with all the results from the tournaments
+    .PARAMETER EmailFile
+        The file exported from Poker Maves listing all emails (Accounts > Emails With Names)
+    .PARAMETER outputDirectory
+        THe directory to put html output files for each tournament in.
+    .OUTPUTS
+    HTML files written to the outputDirectory folder
+    .NOTES
+    It was fun to write this in one go while on a road trip. I like it when other folks drive.
 #>
 Function New-PokerSummary {
     [CmdletBinding()]
@@ -100,10 +100,16 @@ Function New-PokerSummary {
         [string]$HTMLReport = ''
         $HTMLReport = New-HTMLReport -Title 'Poker Tournament Results'
 
+        $tournamentName = $Header.TournamentName
+        $tournamentInfo = Send-PokerMavensRestCommand -ServerName 'poker.ms' -Password 'P@ssw0rd' -ApiPath 'api' -CommandSet "TournamentsGet&Name=$tournamentName" -Protocol 'https' -Port 443 -Method 'Post' 
+        $creator = $tournamentInfo.Creator
+        If($creator -eq $Null) {
+            $creator = 'unknown'
+        }
 
         $NewReportSplat = @{
-            TournamentName       = $Header.TournamentName
-            TournamentDirector   = 'unknown'
+            TournamentName       = $tournamentName
+            TournamentDirector   = $creator
             NumberOfParticipants = $Header.Participants
             NumberOfRebuys       = $Header.Rebuys
             NumberOfAddons       = $Header.AddOns
