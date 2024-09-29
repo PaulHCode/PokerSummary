@@ -101,7 +101,7 @@ Function New-PokerSummary {
         $HTMLReport = New-HTMLReport -Title 'Poker Tournament Results'
 
         $tournamentName = $Header.TournamentName
-        $tournamentInfo = Send-PokerMavensRestCommand -ServerName 'poker.ms' -Password 'P@ssw0rd' -ApiPath 'api' -CommandSet "TournamentsGet&Name=$tournamentName" -Protocol 'https' -Port 443 -Method 'Post' 
+        $tournamentInfo = Send-PokerMavensRestCommand -ServerName '127.0.0.1' -Password 'YourPasswordHere' -ApiPath 'api' -CommandSet "TournamentsGet&Name=$tournamentName" -Protocol 'https' -Port 443 -Method 'Post' 
         $creator = $tournamentInfo.Creator
         If($creator -eq $Null) {
             $creator = 'unknown'
